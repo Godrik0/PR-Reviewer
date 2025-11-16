@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'my-go-app'
+    static_configs:
+      # ЗАМЕНИТЕ ЭТУ СТРОКУ!
+      # Если ваше приложение запущено на том же компьютере, что и Docker,
+      # используйте 'host.docker.internal:<порт>'
+      # Например: 'host.docker.internal:8080'
+      - targets: ['host.docker.internal:8080']

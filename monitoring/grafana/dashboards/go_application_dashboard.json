@@ -1,0 +1,85 @@
+{
+  "__inputs": [],
+  "__requires": [],
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 2,
+      "title": "HTTP Request Rate",
+      "type": "timeseries",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "reqps" } },
+      "options": { "legend": { "displayMode": "table", "placement": "right" } },
+      "targets": [
+        { "expr": "sum(rate(pr_reviewer_http_requests_total[2m])) by (path)", "legendFormat": "{{path}}" }
+      ]
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 4,
+      "title": "95th Percentile Request Duration",
+      "type": "timeseries",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" } },
+      "options": { "legend": { "displayMode": "table", "placement": "right" } },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(pr_reviewer_http_request_duration_seconds_bucket[5m])) by (le, path))", "legendFormat": "{{path}}" }
+      ]
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
+      "id": 6,
+      "title": "Memory Usage (Resident)",
+      "type": "timeseries",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "bytes" } },
+      "targets": [
+        { "expr": "process_resident_memory_bytes{job=\"my-go-app\"}", "legendFormat": "Memory" }
+      ]
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+      "id": 8,
+      "title": "CPU Usage",
+      "type": "timeseries",
+       "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "percent" } },
+      "targets": [
+        { "expr": "rate(process_cpu_seconds_total{job=\"my-go-app\"}[2m]) * 100", "legendFormat": "CPU" }
+      ]
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+      "id": 10,
+      "title": "Goroutines",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "go_goroutines{job=\"my-go-app\"}", "legendFormat": "Goroutines" }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Go Application Dashboard",
+  "uid": "unique-go-app-dashboard-id"
+}
