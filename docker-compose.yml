@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: pr-reviewer-postgres
+    environment:
+      POSTGRES_USER: prreviewer
+      POSTGRES_PASSWORD: prreviewer123
+      POSTGRES_DB: prreviewer
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prreviewer"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pr-reviewer-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pr-reviewer-app
+    ports:
+      - "8080:8080"
+    environment:
+      PR_REVIEWER_STORAGE_TYPE: postgres
+      PR_REVIEWER_STORAGE_POSTGRES_URL: host=postgres port=5432 user=prreviewer password=prreviewer123 dbname=prreviewer sslmode=disable
+      PR_REVIEWER_SERVER_PORT: 8080
+      PR_REVIEWER_AUTH_TYPE: static
+      PR_REVIEWER_AUTH_ADMIN_TOKEN: admin-secret-token
+      PR_REVIEWER_AUTH_USER_TOKEN: user-secret-token
+      PR_REVIEWER_LOG_LEVEL: error
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pr-reviewer-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-remote-write-receiver'
+    networks:
+      - pr-reviewer-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning/:/etc/grafana/provisioning/
+      - ./monitoring/grafana/dashboards/:/var/lib/grafana/dashboards/
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    networks:
+      - pr-reviewer-network
+
+  k6:
+    image: grafana/k6:latest
+    container_name: k6
+    ports:
+      - "6565:6565"
+    volumes:
+      - ./load-testing/scripts:/scripts
+    networks:
+      - pr-reviewer-network
+    environment:
+      - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write
+    depends_on:
+      - app 
+
+volumes:
+  postgres_data: {}
+  prometheus_data: {}
+  grafana_data: {}
+
+networks:
+  pr-reviewer-network:
+    driver: bridge

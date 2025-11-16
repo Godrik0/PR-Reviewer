@@ -1,0 +1,16 @@
+server:
+  port: 8080
+  read_timeout: 10
+  write_timeout: 10
+  shutdown_timeout: 10
+
+storage:
+  type: memory  # memory или postgres
+  postgres_url: ""
+
+auth:
+  type: static  # static 
+  admin_token: admin-secret-token
+  user_token: user-secret-token
+
+log_level: info  # debug, info, warn, error
